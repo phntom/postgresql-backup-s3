@@ -38,8 +38,8 @@ if [ "${POSTGRES_USER}" = "**None**" ]; then
   exit 1
 fi
 
-if [ "${PGPASSWORD}" = "**None**" ]; then
-  echo "You need to set the PGPASSWORD environment variable or link to a container named POSTGRES."
+if [ "${POSTGRES_PASSWORD}" = "**None**" ]; then
+  echo "You need to set the POSTGRES_PASSWORD environment variable or link to a container named POSTGRES."
   exit 1
 fi
 
@@ -55,24 +55,35 @@ else
   P7Z_PASS=""
 fi
 
+export PGPASSWORD=$POSTGRES_PASSWORD
 POSTGRES_HOST_OPTS="-h $POSTGRES_HOST -p $POSTGRES_PORT -U $POSTGRES_USER $POSTGRES_EXTRA_OPTS"
 
+echo "Fetching latest backup from s3://${S3_BUCKET}..."
 
-DATE_NOW=$(date +"%Y%m%dT%H%M%SZ")
-SRC_FILE=${POSTGRES_DATABASE}_${DATE_NOW}.sql
-DST_FILE=${SRC_FILE}.7z
-REMOTE_PATH=$(date +"%Y-%m/%d/%H")/${DST_FILE}
+LAST_KEY=$(aws s3api $AWS_ARGS list-objects-v2 --bucket "$S3_BUCKET" --query 'sort_by(Contents, &LastModified)[-1].Key' --output=text)
 
-echo "$DATE_NOW Dumping ${POSTGRES_DATABASE} db ${POSTGRES_HOST} to s3://$S3_BUCKET/$S3_PREFIX/$REMOTE_PATH"
+echo "Found $LAST_KEY, Downloading..."
 
-if [ "${POSTGRES_DATABASE}" == "all" ]; then
-  pg_dumpall $POSTGRES_HOST_OPTS \
-  | 7z a -si"${SRC_FILE}" "$P7Z_PASS" $DST_FILE
-else
-  pg_dump $POSTGRES_HOST_OPTS $POSTGRES_DATABASE \
-  | 7z a -si"${SRC_FILE}" "$P7Z_PASS" $DST_FILE
-fi
+mkdir output || exit 3
+cd output
 
-aws $AWS_ARGS s3 cp "$DST_FILE" "s3://$S3_BUCKET/$S3_PREFIX/$REMOTE_PATH"
+aws $AWS_ARGS s3 cp "s3://${S3_BUCKET}/${LAST_KEY}" . || exit 2
 
-echo "$(date +"%Y%m%dT%H%M%SZ") Done"
+FILENAME=$(ls)
+
+echo "Downloaded ${FILENAME}"
+
+ls -lah
+
+echo "7z e -p... $FILENAME"
+7z e "$P7Z_PASS" "$FILENAME" || exit 5
+
+rm -v "$FILENAME"
+
+FILENAME=$(ls)
+
+echo "Extracted $FILENAME, Restoring..."
+
+psql $POSTGRES_HOST_OPTS -f $FILENAME || exit 6
+
+echo "SQL backup finished"
