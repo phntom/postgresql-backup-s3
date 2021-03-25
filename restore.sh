@@ -55,7 +55,6 @@ else
   P7Z_PASS=""
 fi
 
-export PGPASSWORD=$POSTGRES_PASSWORD
 POSTGRES_HOST_OPTS="-h $POSTGRES_HOST -p $POSTGRES_PORT -U $POSTGRES_USER $POSTGRES_EXTRA_OPTS"
 
 echo "Fetching latest backup from s3://${S3_BUCKET}..."
@@ -86,4 +85,6 @@ echo "Extracted $FILENAME, Restoring..."
 
 psql $POSTGRES_HOST_OPTS -f $FILENAME || exit 6
 
-echo "SQL backup finished"
+echo "SQL restore finished"
+
+sleep 9999
