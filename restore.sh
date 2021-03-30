@@ -72,7 +72,7 @@ echo "7z e -p... $FILENAME"
 
 rm -v "$FILENAME"
 
-FILENAME=$(ls '*_*.sql')
+FILENAME=$(ls ./*_*.sql)
 
 echo "Replacing LOCALE en_US.UTF-8 with en_US.utf8 in $FILENAME"
 

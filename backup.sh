@@ -64,10 +64,10 @@ else
 fi
 
 pg_dumpall --globals-only \
-  | 7z a -si"zzz_globals.sql" "$P7Z_PASS" "$DST_FILE"
+  | 7z a -si"globals.sql" "$P7Z_PASS" "$DST_FILE"
 
 pg_dumpall --roles-only \
-  | 7z a -si"zzz_roles.sql" "$P7Z_PASS" "$DST_FILE"
+  | 7z a -si"roles.sql" "$P7Z_PASS" "$DST_FILE"
 
 aws $AWS_ARGS s3 cp "$DST_FILE" "s3://$S3_BUCKET/$S3_PREFIX/$REMOTE_PATH"
 
