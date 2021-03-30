@@ -1,5 +1,6 @@
+# docker build -t phntom/postgresql-backup-s3:1.0.11 --pull . && docker push phntom/postgresql-backup-s3:1.0.11
+
 FROM alpine
-LABEL maintainer="ITBM"
 
 WORKDIR /root
 
@@ -8,7 +9,6 @@ RUN apk update \
 	coreutils \
 	postgresql-client \
 	python3 py3-pip \
-	openssl \
 	curl \
 	p7zip \
 	&& pip3 install --upgrade pip \
@@ -18,9 +18,9 @@ RUN apk update \
 	&& apk del curl
 
 ENV POSTGRES_DATABASE **None**
-ENV POSTGRES_HOST **None**
-ENV POSTGRES_PORT 5432
-ENV POSTGRES_USER **None**
+ENV PGHOST **None**
+ENV PGPORT 5432
+ENV PGUSER **None**
 ENV PGPASSWORD **None**
 ENV POSTGRES_EXTRA_OPTS ''
 ENV AWS_ACCESS_KEY_ID **None**

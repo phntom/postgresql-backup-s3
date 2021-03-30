@@ -23,23 +23,18 @@ if [ "${POSTGRES_DATABASE}" = "**None**" ]; then
   exit 1
 fi
 
-if [ "${POSTGRES_HOST}" = "**None**" ]; then
-  if [ -n "${POSTGRES_PORT_5432_TCP_ADDR}" ]; then
-    POSTGRES_HOST=$POSTGRES_PORT_5432_TCP_ADDR
-    POSTGRES_PORT=$POSTGRES_PORT_5432_TCP_PORT
-  else
-    echo "You need to set the POSTGRES_HOST environment variable."
-    exit 1
-  fi
-fi
-
-if [ "${POSTGRES_USER}" = "**None**" ]; then
-  echo "You need to set the POSTGRES_USER environment variable."
+if [ "${PGHOST}" = "**None**" ]; then
+  echo "You need to set the PGHOST environment variable."
   exit 1
 fi
 
-if [ "${POSTGRES_PASSWORD}" = "**None**" ]; then
-  echo "You need to set the POSTGRES_PASSWORD environment variable or link to a container named POSTGRES."
+if [ "${PGUSER}" = "**None**" ]; then
+  echo "You need to set the PGUSER environment variable."
+  exit 1
+fi
+
+if [ "${PGPASSWORD}" = "**None**" ]; then
+  echo "You need to set the PGPASSWORD environment variable or link to a container named POSTGRES."
   exit 1
 fi
 
@@ -54,8 +49,6 @@ if [ "${ENCRYPTION_PASSWORD}" != "**None**" ]; then
 else
   P7Z_PASS=""
 fi
-
-POSTGRES_HOST_OPTS="-h $POSTGRES_HOST -p $POSTGRES_PORT -U $POSTGRES_USER $POSTGRES_EXTRA_OPTS"
 
 echo "Fetching latest backup from s3://${S3_BUCKET}..."
 
@@ -79,12 +72,24 @@ echo "7z e -p... $FILENAME"
 
 rm -v "$FILENAME"
 
-FILENAME=$(ls)
+FILENAME=$(ls '*_*.sql')
+
+echo "Replacing LOCALE en_US.UTF-8 with en_US.utf8 in $FILENAME"
+
+sed -i"" "s/ LOCALE = 'en_US.UTF-8'/en_US.utf8/" $FILENAME
+
+echo "Connecting $PGHOST:$PGPORT..."
+
+touch empty
+psql $POSTGRES_EXTRA_OPTS -f empty
 
 echo "Extracted $FILENAME, Restoring..."
 
-psql $POSTGRES_HOST_OPTS -f $FILENAME || exit 6
+psql $POSTGRES_EXTRA_OPTS -f $FILENAME || sleep 9999
 
-echo "SQL restore finished"
+if [ -f "zzz_roles.sql" ]; then
+  echo "Restoring roles..."
+  psql $POSTGRES_EXTRA_OPTS -f zzz_roles.sql
+fi
 
-sleep 9999
+echo Done!
