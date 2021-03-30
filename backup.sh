@@ -58,9 +58,9 @@ REMOTE_PATH=$(date +"%Y-%m/%d/%H")/${DST_FILE}
 echo "$DATE_NOW Dumping ${POSTGRES_DATABASE} db ${PGHOST} to s3://$S3_BUCKET/$S3_PREFIX/$REMOTE_PATH"
 
 if [ "${POSTGRES_DATABASE}" == "all" ]; then
-  pg_dumpall --no-acl | 7z a -si"${SRC_FILE}" "$P7Z_PASS" "$DST_FILE"
+  pg_dumpall --clean --no-acl | 7z a -si"${SRC_FILE}" "$P7Z_PASS" "$DST_FILE"
 else
-  pg_dump "$POSTGRES_DATABASE" | 7z a -si"${SRC_FILE}" "$P7Z_PASS" "$DST_FILE"
+  pg_dump --clean "$POSTGRES_DATABASE" | 7z a -si"${SRC_FILE}" "$P7Z_PASS" "$DST_FILE"
 fi
 
 pg_dumpall --globals-only \
