@@ -51,13 +51,13 @@ else
 fi
 
 DATE_NOW=$(date +"%Y%m%dT%H%M%SZ")
-SRC_FILE=${POSTGRES_DATABASE}_${DATE_NOW}.sql
-DST_FILE=${SRC_FILE}.7z
+DST_FILE=${DATE_NOW}.7z
 REMOTE_PATH=$(date +"%Y-%m/%d/%H")/${DST_FILE}
 
 echo "$DATE_NOW Dumping ${POSTGRES_DATABASE} db ${PGHOST} to s3://$S3_BUCKET/$S3_PREFIX/$REMOTE_PATH"
 
 if [ "${POSTGRES_DATABASE}" == "all" ]; then
+  SRC_FILE=all_${DATE_NOW}.sql
   pg_dumpall --clean --no-acl | 7z a -si"${SRC_FILE}" "$P7Z_PASS" "$DST_FILE"
 else
   for DB_NAME in $POSTGRES_DATABASE; do
