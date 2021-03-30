@@ -61,8 +61,9 @@ if [ "${POSTGRES_DATABASE}" == "all" ]; then
   pg_dumpall --clean --no-acl | 7z a -si"${SRC_FILE}" "$P7Z_PASS" "$DST_FILE"
 else
   for DB_NAME in $POSTGRES_DATABASE; do
-    SRC_FILE=${DB_NAME}_${DATE_NOW}.sql
-    pg_dump --clean "$DB_NAME" | 7z a -si"${SRC_FILE}" "$P7Z_PASS" "$DST_FILE"
+    SRC_FILE=${DB_NAME}_${DATE_NOW}.tar
+    echo "pg_dump -Ft --encoding=UTF-8 --serializable-deferrable --clean $DB_NAME > ${DB_NAME}_${DATE_NOW}.tar"
+    pg_dump -Ft --encoding=UTF-8 --serializable-deferrable --clean "$DB_NAME" | 7z a -si"${SRC_FILE}" "$P7Z_PASS" "$DST_FILE"
   done
 fi
 

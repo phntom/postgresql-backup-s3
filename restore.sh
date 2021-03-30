@@ -77,9 +77,11 @@ touch empty
 psql $POSTGRES_EXTRA_OPTS -f empty || exit 7
 echo "Connected!"
 
-ls -lah ./*_*.sql
+ls -lah ./*
+
 for FILENAME in ./*_*.sql; do
-  [ -f "$FILENAME" ] || exit 8
+
+  [ -f "$FILENAME" ] || continue
 
   echo "Replacing LOCALE with LC_COLLATE for $FILENAME"
   sed -i"" "s/ LOCALE = 'en_US.UTF-8';$/ LC_COLLATE = 'en_US.UTF-8';/" $FILENAME
@@ -92,6 +94,15 @@ for FILENAME in ./*_*.sql; do
 
 done
 
+for FILENAME in ./*_*.tar; do
+
+  [ -f "$FILENAME" ] || continue
+
+  echo pg_restore --clean --if-exists --single-transaction $FILENAME -f $FILENAME.log
+  pg_restore --clean --if-exists --single-transaction $FILENAME -f $FILENAME.log || sleep 9999
+
+done
+
 
 if [ -f "roles.sql" ]; then
   echo "Filtering out ${PGUSER} role creation..."
@@ -99,7 +110,7 @@ if [ -f "roles.sql" ]; then
   mv -v roles1.sql roles.sql
 
   echo "Restoring roles..."
-  psql $POSTGRES_EXTRA_OPTS -f roles.sql
+  psql $POSTGRES_EXTRA_OPTS -f roles.sql || sleep 9999
 fi
 
 echo Done!

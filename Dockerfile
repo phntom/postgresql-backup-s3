@@ -1,4 +1,4 @@
-# docker build -t phntom/postgresql-backup-s3:1.0.13 --pull . && docker push phntom/postgresql-backup-s3:1.0.13
+# docker build -t phntom/postgresql-backup-s3:1.0.14 --pull . && docker push phntom/postgresql-backup-s3:1.0.14
 
 FROM alpine
 
