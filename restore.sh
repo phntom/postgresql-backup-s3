@@ -79,6 +79,14 @@ echo "Connected!"
 
 ls -lah ./*
 
+if [ -f "roles.sql" ]; then
+  echo "Creating roles..."
+  grep -vE "^(CREATE|ALTER) ROLE ${PGUSER}[; ]" roles.sql > roles1.sql
+  grep -vE "^ALTER ROLE " roles1.sql > roles2.sql
+  psql $POSTGRES_EXTRA_OPTS -f roles2.sql || sleep 9999
+fi
+
+
 for FILENAME in ./*_*.sql; do
 
   [ -f "$FILENAME" ] || continue
@@ -121,12 +129,9 @@ fi
 
 
 if [ -f "roles.sql" ]; then
-  echo "Filtering out ${PGUSER} role creation..."
-  grep -vE "^(CREATE|ALTER) ROLE ${PGUSER}[; ]" roles.sql > roles1.sql
-  mv -v roles1.sql roles.sql
-
-  echo "Restoring roles..."
-  psql $POSTGRES_EXTRA_OPTS -f roles.sql || sleep 9999
+  echo "Altering roles (adding passwords)..."
+  grep -vE "^CREATE ROLE " roles1.sql > roles2.sql
+  psql $POSTGRES_EXTRA_OPTS -f roles2.sql || sleep 9999
 fi
 
 echo Done!
