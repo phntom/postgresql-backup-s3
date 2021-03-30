@@ -62,8 +62,8 @@ if [ "${POSTGRES_DATABASE}" == "all" ]; then
 else
   for DB_NAME in $POSTGRES_DATABASE; do
     SRC_FILE=${DB_NAME}_${DATE_NOW}.tar
-    echo "pg_dump -Ft --encoding=UTF-8 --serializable-deferrable --clean $DB_NAME > ${DB_NAME}_${DATE_NOW}.tar"
-    pg_dump -Ft --encoding=UTF-8 --serializable-deferrable --clean "$DB_NAME" | 7z a -si"${SRC_FILE}" "$P7Z_PASS" "$DST_FILE"
+    echo "pg_dump -Ft --encoding=UTF-8 --serializable-deferrable $DB_NAME > ${DB_NAME}_${DATE_NOW}.tar"
+    pg_dump -Ft --encoding=UTF-8 --serializable-deferrable "$DB_NAME" | 7z a -si"${SRC_FILE}" "$P7Z_PASS" "$DST_FILE"
   done
 fi
 

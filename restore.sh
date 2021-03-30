@@ -90,7 +90,7 @@ for FILENAME in ./*_*.sql; do
   grep -vE "^(CREATE|ALTER) ROLE " "$FILENAME" > "${FILENAME}.1"
   mv -v "${FILENAME}.1" "$FILENAME"
 
-  psql $POSTGRES_EXTRA_OPTS -f "$FILENAME" || sleep 9999
+  psql $POSTGRES_EXTRA_OPTS -f "$FILENAME" || sleep 999
 
 done
 
@@ -98,8 +98,18 @@ for FILENAME in ./*_*.tar; do
 
   [ -f "$FILENAME" ] || continue
 
-  echo pg_restore --clean --if-exists --single-transaction $FILENAME -f $FILENAME.log
-  pg_restore --clean --if-exists --single-transaction $FILENAME -f $FILENAME.log || sleep 9999
+  for ATTEMPT in 1 2 3; do
+    echo "[attempt $ATTEMPT/3] pg_restore --clean --if-exists --create $FILENAME -d postgres"
+    FAIL=0
+    pg_restore --clean --if-exists --create "$FILENAME" -d postgres && break
+    FAIL=1
+  done
+
+  if [ $FAIL -eq 1 ]; then
+    echo "failed restoring $FILENAME :("
+    sleep 60
+    exit 9
+  fi
 
 done
 
