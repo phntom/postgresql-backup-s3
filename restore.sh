@@ -94,6 +94,7 @@ for FILENAME in ./*_*.sql; do
 
 done
 
+FAIL_ANY=0
 for FILENAME in ./*_*.tar; do
 
   [ -f "$FILENAME" ] || continue
@@ -106,12 +107,17 @@ for FILENAME in ./*_*.tar; do
   done
 
   if [ $FAIL -eq 1 ]; then
-    echo "failed restoring $FILENAME :("
-    sleep 60
-    exit 9
+    echo "no more attempts to restore $FILENAME will be made :("
+    FAIL_ANY="$FILENAME"
   fi
 
 done
+
+if [ -z "$FAIL_ANY" ]; then
+  echo "$FILENAME failed to restore, aborting"
+  sleep 30
+  exit 7
+fi
 
 
 if [ -f "roles.sql" ]; then
