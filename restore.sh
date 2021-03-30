@@ -72,24 +72,34 @@ echo "7z e -p... $FILENAME"
 
 rm -v "$FILENAME"
 
-FILENAME=$(ls ./*_*.sql)
-
-echo "Replacing LOCALE en_US.UTF-8 with en_US.utf8 in $FILENAME"
-
-sed -i"" "s/ LOCALE = 'en_US.UTF-8'/en_US.utf8/" $FILENAME
-
 echo "Connecting $PGHOST:$PGPORT..."
-
 touch empty
-psql $POSTGRES_EXTRA_OPTS -f empty
+psql $POSTGRES_EXTRA_OPTS -f empty || exit 7
+echo "Connected!"
 
-echo "Extracted $FILENAME, Restoring..."
+ls -lah ./*_*.sql
+for FILENAME in ./*_*.sql; do
+  [ -f "$FILENAME" ] || exit 8
 
-psql $POSTGRES_EXTRA_OPTS -f $FILENAME || sleep 9999
+  echo "Replacing LOCALE with LC_COLLATE for $FILENAME"
+  sed -i"" "s/ LOCALE = 'en_US.UTF-8';$/ LC_COLLATE = 'en_US.UTF-8';/" $FILENAME
 
-if [ -f "zzz_roles.sql" ]; then
+  echo "Filtering out role creation for $FILENAME..."
+  grep -vE "^(CREATE|ALTER) ROLE " "$FILENAME" > "${FILENAME}.1"
+  mv -v "${FILENAME}.1" "$FILENAME"
+
+  psql $POSTGRES_EXTRA_OPTS -f "$FILENAME" || sleep 9999
+
+done
+
+
+if [ -f "roles.sql" ]; then
+  echo "Filtering out ${PGUSER} role creation..."
+  grep -vE "^(CREATE|ALTER) ROLE ${PGUSER}[; ]" roles.sql > roles1.sql
+  mv -v roles1.sql roles.sql
+
   echo "Restoring roles..."
-  psql $POSTGRES_EXTRA_OPTS -f zzz_roles.sql
+  psql $POSTGRES_EXTRA_OPTS -f roles.sql
 fi
 
 echo Done!

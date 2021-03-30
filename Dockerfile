@@ -1,13 +1,14 @@
-# docker build -t phntom/postgresql-backup-s3:1.0.12 --pull . && docker push phntom/postgresql-backup-s3:1.0.12
+# docker build -t phntom/postgresql-backup-s3:1.0.13 --pull . && docker push phntom/postgresql-backup-s3:1.0.13
 
 FROM alpine
 
 WORKDIR /root
 
-RUN apk update \
+RUN apk add postgresql-client=11.11-r0 --repository=http://dl-cdn.alpinelinux.org/alpine/v3.10/main \
+    && apk update \
 	&& apk add --no-cache \
 	coreutils \
-	postgresql-client \
+	postgresql-client=~11.11-r0 \
 	python3 py3-pip \
 	curl \
 	p7zip \
