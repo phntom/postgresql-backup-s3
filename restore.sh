@@ -52,7 +52,7 @@ fi
 
 echo "Fetching latest backup from s3://${S3_BUCKET}..."
 
-LAST_KEY=$(aws s3api $AWS_ARGS list-objects-v2 --bucket "$S3_BUCKET" --query 'sort_by(Contents, &LastModified)[-1].Key' --output=text)
+LAST_KEY=$(aws s3api $AWS_ARGS list-objects-v2 --bucket "$S3_BUCKET" --query 'sort_by(Contents, &LastModified)[-1].Key' --output=text | tail -n1)
 
 echo "Found $LAST_KEY, Downloading..."
 
