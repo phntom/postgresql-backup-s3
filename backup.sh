@@ -38,7 +38,7 @@ if [ "${PGPASSWORD}" = "**None**" ]; then
   exit 1
 fi
 
-if [ "${S3_ENDPOINT}" == "**None**" ]; then
+if [ "${S3_ENDPOINT}" = "**None**" ]; then
   AWS_ARGS=""
 else
   AWS_ARGS="--endpoint-url ${S3_ENDPOINT}"
@@ -56,7 +56,7 @@ REMOTE_PATH=$(date +"%Y-%m/%d/%H")/${DST_FILE}
 
 echo "$DATE_NOW Dumping ${POSTGRES_DATABASE} db ${PGHOST} to s3://$S3_BUCKET/$S3_PREFIX/$REMOTE_PATH"
 
-if [ "${POSTGRES_DATABASE}" == "all" ]; then
+if [ "${POSTGRES_DATABASE}" = "all" ]; then
   SRC_FILE=all_${DATE_NOW}.sql
   pg_dumpall --clean --no-acl | 7z a -si"${SRC_FILE}" "$P7Z_PASS" "$DST_FILE"
 else

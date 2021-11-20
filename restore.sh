@@ -38,7 +38,7 @@ if [ "${PGPASSWORD}" = "**None**" ]; then
   exit 1
 fi
 
-if [ "${S3_ENDPOINT}" == "**None**" ]; then
+if [ "${S3_ENDPOINT}" = "**None**" ]; then
   AWS_ARGS=""
 else
   AWS_ARGS="--endpoint-url ${S3_ENDPOINT}"
