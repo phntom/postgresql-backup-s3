@@ -26,8 +26,8 @@ else
   AWS_ARGS="--endpoint-url ${S3_ENDPOINT}"
 fi
 
-DATE_TODAY=$(date +"/%Y-%m/%d/")
-DATE_THIS_MONTH=$(date +"/%Y-%m/")
+DATE_TODAY=$(date +"%Y-%m/%d/")
+DATE_THIS_MONTH=$(date +"%Y-%m/")
 DATE_ONLY_YEAR=$(date +"%Y")
 AWS_COMMAND=aws
 if [ "x${DRY_RUN}" != "x" ]; then
@@ -40,16 +40,16 @@ echo "remove old backups..."
 for path in `aws $AWS_ARGS s3 ls --recursive $S3_BUCKET --summarize --human-readable | \
   grep -vE "${DATE_ONLY_YEAR}....T..0[0-4]" | \
   grep -v "${DATE_THIS_MONTH}" | \
-  cut -f8 -d' '`
+  grep -oE "${S3_PREFIX}.*"`
 do
 	$AWS_COMMAND $AWS_ARGS s3 rm s3://${S3_BUCKET}/${path}
 done
 
 echo "remove backups from this month..."
 for path in `aws $AWS_ARGS s3 ls --recursive $S3_BUCKET --summarize --human-readable | \
-  grep -vE "${DATE_ONLY_YEAR}....T..[03][0-4]" | \
+  grep -vE "${DATE_ONLY_YEAR}....T...[0-4]" | \
   grep -v "${DATE_TODAY}" | \
-  cut -f8 -d' '`
+  grep -oE "${S3_PREFIX}.*"`
 do
 	$AWS_COMMAND $AWS_ARGS s3 rm s3://${S3_BUCKET}/${path}
 done

@@ -1,4 +1,4 @@
-# docker build -t phntom/postgresql-backup-s3:1.0.16 --pull . && docker push phntom/postgresql-backup-s3:1.0.14
+# docker build -t phntom/postgresql-backup-s3:1.0.19 --pull . && docker push phntom/postgresql-backup-s3:1.0.19
 
 FROM alpine:3.10
 
@@ -7,7 +7,7 @@ WORKDIR /root
 RUN apk update \
 	&& apk add --no-cache \
 	coreutils \
-	postgresql-client=~11.11-r0 \
+	postgresql-client=~11.12-r0 \
 	python3 py3-pip \
 	curl \
 	p7zip
@@ -35,6 +35,6 @@ ENV ENCRYPTION_PASSWORD **None**
 ENV DELETE_OLDER_THAN **None**
 ENV PATH=/root:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
 
-COPY run.sh backup.sh restore.sh /root/
+COPY run.sh backup.sh restore.sh cleanup.sh /root/
 
 CMD ["sh", "run.sh"]
