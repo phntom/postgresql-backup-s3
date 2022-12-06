@@ -1,9 +1,9 @@
 #!/usr/bin/env sh
 
-if [ "${DEBUG}" = "no"]; then
-  set -e
-else
+if [ "${DEBUG}" = "yes"]; then
   set -ex
+else
+  set -e
 fi
 set -o pipefail
 
