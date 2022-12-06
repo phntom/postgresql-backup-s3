@@ -1,20 +1,20 @@
-# docker build -t phntom/postgresql-backup-s3:1.0.19 --pull . && docker push phntom/postgresql-backup-s3:1.0.19
+# docker build -t phntom/postgresql-backup-s3:1.0.22 --pull . && docker push phntom/postgresql-backup-s3:1.0.22
 
-FROM alpine:3.10
+FROM alpine:3.17
 
 WORKDIR /root
 
 RUN apk update \
 	&& apk add --no-cache \
 	coreutils \
-	postgresql-client=~11.12-r0 \
+	postgresql-client \
 	python3 py3-pip \
 	curl \
 	p7zip
 
 RUN pip3 install --upgrade pip
 RUN pip3 install awscli
-RUN curl -L --insecure https://github.com/odise/go-cron/releases/download/v0.0.6/go-cron-linux.gz | zcat > /usr/local/bin/go-cron \
+RUN curl -L --insecure https://github.com/odise/go-cron/releases/download/v0.0.7/go-cron-linux.gz | zcat > /usr/local/bin/go-cron \
 	&& chmod u+x /usr/local/bin/go-cron
 
 ENV POSTGRES_DATABASE **None**
@@ -34,6 +34,7 @@ ENV SCHEDULE **None**
 ENV ENCRYPTION_PASSWORD **None**
 ENV DELETE_OLDER_THAN **None**
 ENV PATH=/root:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+ENV DEBUG=no
 
 COPY run.sh backup.sh restore.sh cleanup.sh /root/
 

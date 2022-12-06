@@ -1,6 +1,10 @@
-#! /bin/sh
+#!/usr/bin/env sh
 
-set -e
+if [ "${DEBUG}" = "no"]; then
+  set -e
+else
+  set -ex
+fi
 set -o pipefail
 
 if [ "${AWS_ACCESS_KEY_ID}" = "**None**" ]; then
