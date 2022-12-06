@@ -1,6 +1,6 @@
 #!/usr/bin/env sh
 
-if [ "${DEBUG}" = "yes"]; then
+if [ "${DEBUG}" = "yes" ]; then
   set -ex
 else
   set -e
