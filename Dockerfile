@@ -1,6 +1,12 @@
 # docker build -t phntom/postgresql-backup-s3:1.0.22 --pull . && docker push phntom/postgresql-backup-s3:1.0.22
 
-FROM alpine:3.17
+#FROM alpine:3.17
+# for pg_dump 15.7
+# docker buildx build --platform linux/amd64 -t phntom/postgresql-backup-s3:15.7.26 --push .
+
+FROM alpine:3.19
+# for pg_dump 16.3
+# docker buildx build --platform linux/amd64 -t phntom/postgresql-backup-s3:16.3.26 --push  .
 
 WORKDIR /root
 
@@ -8,13 +14,10 @@ RUN apk update \
 	&& apk add --no-cache \
 	coreutils \
 	postgresql-client \
-	python3 py3-pip \
 	curl \
-	p7zip
-
-RUN pip3 install --upgrade pip
-RUN pip3 install awscli
-RUN curl -L --insecure https://github.com/odise/go-cron/releases/download/v0.0.7/go-cron-linux.gz | zcat > /usr/local/bin/go-cron \
+	p7zip \
+    aws-cli && \
+    curl -L --insecure https://github.com/odise/go-cron/releases/download/v0.0.7/go-cron-linux.gz | zcat > /usr/local/bin/go-cron \
 	&& chmod u+x /usr/local/bin/go-cron
 
 ENV POSTGRES_DATABASE **None**
