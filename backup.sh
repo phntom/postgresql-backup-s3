@@ -21,8 +21,8 @@ if [ "${POSTGRES_DATABASE}" = "all" ]; then
   pg_dumpall --clean --no-acl | 7z a -si"${SRC_FILE_NAME_IN_ARCHIVE}" "$P7Z_PASS" "$DST_FILE"
 else
   echo "Dumping specified databases: ${POSTGRES_DATABASE}"
-  # Use read to split POSTGRES_DATABASE into an array, respecting spaces in names
-  IFS=' ' read -r -a DB_ARRAY <<< "$POSTGRES_DATABASE"
+  # Use read to split POSTGRES_DATABASE into an array, using a comma as the delimiter
+  IFS=',' read -r -a DB_ARRAY <<< "$POSTGRES_DATABASE"
 
   for DB_NAME in "${DB_ARRAY[@]}"; do
     # Remove leading/trailing whitespace from DB_NAME, just in case
