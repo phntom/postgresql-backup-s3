@@ -39,6 +39,6 @@ ENV DELETE_OLDER_THAN **None**
 ENV PATH=/root:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
 ENV DEBUG=no
 
-COPY run.sh backup.sh restore.sh cleanup.sh /root/
+COPY --chmod=0755 run.sh backup.sh restore.sh cleanup.sh common.sh /root/
 
 CMD ["sh", "run.sh"]

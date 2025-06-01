@@ -1,59 +1,14 @@
 #!/usr/bin/env sh
 
-if [ "${DEBUG}" = "yes" ]; then
-  set -ex
-else
-  set -e
-fi
+# Exit on error and pipe failure. These are important to set early.
+set -e
 set -o pipefail
 
-if [ "${AWS_ACCESS_KEY_ID}" = "**None**" ]; then
-  echo "You need to set the AWS_ACCESS_KEY_ID environment variable."
-  exit 1
-fi
+# Source common environment variables and configurations
+# shellcheck source=./common.sh
+. ./common.sh "backup"
 
-if [ "${AWS_SECRET_ACCESS_KEY}" = "**None**" ]; then
-  echo "You need to set the AWS_SECRET_ACCESS_KEY environment variable."
-  exit 1
-fi
-
-if [ "${S3_BUCKET}" = "**None**" ]; then
-  echo "You need to set the S3_BUCKET environment variable."
-  exit 1
-fi
-
-if [ "${POSTGRES_DATABASE}" = "**None**" ]; then
-  echo "You need to set the POSTGRES_DATABASE environment variable."
-  exit 1
-fi
-
-if [ "${PGHOST}" = "**None**" ]; then
-  echo "You need to set the PGHOST environment variable."
-  exit 1
-fi
-
-if [ "${PGUSER}" = "**None**" ]; then
-  echo "You need to set the PGUSER environment variable."
-  exit 1
-fi
-
-if [ "${PGPASSWORD}" = "**None**" ]; then
-  echo "You need to set the PGPASSWORD environment variable or link to a container named POSTGRES."
-  exit 1
-fi
-
-if [ "${S3_ENDPOINT}" = "**None**" ]; then
-  AWS_ARGS=""
-else
-  AWS_ARGS="--endpoint-url ${S3_ENDPOINT}"
-fi
-
-if [ "${ENCRYPTION_PASSWORD}" != "**None**" ]; then
-  P7Z_PASS="-p${ENCRYPTION_PASSWORD}"
-else
-  P7Z_PASS=""
-fi
-
+# Specific setup for backup.sh
 DATE_NOW=$(date +"%Y%m%dT%H%M%SZ")
 DST_FILE=${DATE_NOW}.7z
 REMOTE_PATH=$(date +"%Y-%m/%d/%H")/${DST_FILE}
@@ -61,21 +16,41 @@ REMOTE_PATH=$(date +"%Y-%m/%d/%H")/${DST_FILE}
 echo "$DATE_NOW Dumping ${POSTGRES_DATABASE} db ${PGHOST} to s3://$S3_BUCKET/$S3_PREFIX/$REMOTE_PATH"
 
 if [ "${POSTGRES_DATABASE}" = "all" ]; then
-  SRC_FILE=all_${DATE_NOW}.sql
-  pg_dumpall --clean --no-acl | 7z a -si"${SRC_FILE}" "$P7Z_PASS" "$DST_FILE"
+  echo "Dumping all databases..."
+  SRC_FILE_NAME_IN_ARCHIVE="all_databases_${DATE_NOW}.sql"
+  pg_dumpall --clean --no-acl | 7z a -si"${SRC_FILE_NAME_IN_ARCHIVE}" "$P7Z_PASS" "$DST_FILE"
 else
-  for DB_NAME in $POSTGRES_DATABASE; do
-    SRC_FILE=${DB_NAME}_${DATE_NOW}.tar
-    echo "pg_dump -Ft --encoding=UTF-8 --serializable-deferrable --clean $DB_NAME > ${DB_NAME}_${DATE_NOW}.tar"
-    pg_dump -Ft --encoding=UTF-8 --serializable-deferrable --clean "$DB_NAME" | 7z a -si"${SRC_FILE}" "$P7Z_PASS" "$DST_FILE"
+  echo "Dumping specified databases: ${POSTGRES_DATABASE}"
+  # Use read to split POSTGRES_DATABASE into an array, using a comma as the delimiter
+  IFS=',' read -r -a DB_ARRAY <<< "$POSTGRES_DATABASE"
+
+  for DB_NAME in "${DB_ARRAY[@]}"; do
+    # Remove leading/trailing whitespace from DB_NAME, just in case
+    DB_NAME_TRIMMED=$(echo "$DB_NAME" | xargs)
+    if [ -z "$DB_NAME_TRIMMED" ]; then
+      continue # Skip empty names if any result from splitting
+    fi
+
+    echo "Dumping database: '${DB_NAME_TRIMMED}'"
+    # Define how the dump of this specific DB will be named inside the archive
+    SRC_FILE_NAME_IN_ARCHIVE="${DB_NAME_TRIMMED}_${DATE_NOW}.tar"
+
+    # pg_dump command for individual database
+    # Using -Ft for tar format, which is suitable for individual database dumps
+    # The output of pg_dump is piped to 7z
+    pg_dump -Ft --encoding=UTF-8 --serializable-deferrable --clean "$DB_NAME_TRIMMED" | \
+      7z a -si"${SRC_FILE_NAME_IN_ARCHIVE}" "$P7Z_PASS" "$DST_FILE"
   done
 fi
 
-pg_dumpall --globals-only \
-  | 7z a -si"globals.sql" "$P7Z_PASS" "$DST_FILE" || true
+# Add global objects and roles to the same archive
+# It's important that these are added after the main database dumps
+# The `|| true` is to prevent script failure if pg_dumpall has minor issues or empty output for these specific dumps
+echo "Dumping global objects..."
+pg_dumpall --globals-only | 7z a -si"globals_${DATE_NOW}.sql" "$P7Z_PASS" "$DST_FILE" || true
 
-pg_dumpall --roles-only \
-  | 7z a -si"roles.sql" "$P7Z_PASS" "$DST_FILE" || true
+echo "Dumping roles..."
+pg_dumpall --roles-only | 7z a -si"roles_${DATE_NOW}.sql" "$P7Z_PASS" "$DST_FILE" || true
 
 aws $AWS_ARGS s3 cp "$DST_FILE" "s3://$S3_BUCKET/$S3_PREFIX/$REMOTE_PATH"
 
