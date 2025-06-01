@@ -72,6 +72,8 @@ fi
 # Add any checks specific to "cleanup" if they arise,
 # for now, it only uses the common AWS vars.
 
-echo "Common setup for ${SCRIPT_TYPE} completed."
+if [ "${DEBUG}" = "yes" ]; then
+  echo "Common setup for ${SCRIPT_TYPE} completed."
+fi
 # Make sure the last command exits with 0 if no errors
 true
