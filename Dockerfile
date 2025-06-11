@@ -2,11 +2,16 @@
 
 #FROM alpine:3.17
 # for pg_dump 15.7
-# docker buildx build --platform linux/amd64 -t phntom/postgresql-backup-s3:15.7.26 --push .
+# docker buildx build --platform linux/amd64 -t phntom/postgresql-backup-s3:15.7.27 --push .
 
-FROM alpine:3.19
+#FROM alpine:3.19
 # for pg_dump 16.3
-# docker buildx build --platform linux/amd64 -t phntom/postgresql-backup-s3:16.3.26 --push  .
+# docker buildx build --platform linux/amd64 -t phntom/postgresql-backup-s3:16.3.27 --push  .
+
+FROM alpine:3.22
+# for pg_dump 17.5
+# docker buildx build --platform linux/amd64 -t phntom/postgresql-backup-s3:17.5.27 --push  .
+
 
 WORKDIR /root
 
